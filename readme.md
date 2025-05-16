@@ -215,86 +215,92 @@ results = validator.validate()
 
 ---
 
-如需我根據你上傳的 `.ipynb` 整合實際範例或提供你 pipeline 的 GE 驗證設計，我可以幫你補上具體範例。是否要我接下來從 notebook 中讀取資料並加上 GE 驗證程式碼？
+Great Expectations（GE）在資料工程領域主要被用來實踐 **資料品質監控（Data Quality）與資料契約（Data Contracts）**。下面是它在資料工程流程中對應的具體位置與用途：
 
-📌 1. Data Validation（資料驗證）
-Great Expectations 是目前業界最常用的 資料驗證框架，它讓你可以：
+---
 
-驗證 Schema 是否符合預期
+## 📌 1. **Data Validation（資料驗證）**
 
-欄位是否存在、欄位型別是否一致
+Great Expectations 是目前業界最常用的 **資料驗證框架**，它讓你可以：
 
-驗證數值邏輯
+* **驗證 Schema 是否符合預期**
 
-例如：trip_duration >= 0、price > 0
+  * 欄位是否存在、欄位型別是否一致
+* **驗證數值邏輯**
 
-缺值處理
+  * 例如：`trip_duration >= 0`、`price > 0`
+* **缺值處理**
 
-驗證欄位是否允許 NULL、是否有比例上限
+  * 驗證欄位是否允許 NULL、是否有比例上限
+* **唯一性/主鍵驗證**
 
-唯一性/主鍵驗證
-
-像是 user_id、order_id 不可重複
+  * 像是 `user_id`、`order_id` 不可重複
 
 這些驗證在 ETL pipeline 中至關重要，否則錯資料就會一路進到報表或模型中。
 
-📌 2. Data Contract Enforcement（資料契約落實）
+---
+
+## 📌 2. **Data Contract Enforcement（資料契約落實）**
+
 在資料平台內部或對上游團隊，GE 能定義明確的「資料契約」：
 
-輸入資料（如上游 S3、DB、Kafka）應符合 GE 定義的期望
-
-一旦契約破壞，GE 可透過 CI/CD、自動驗證流程 fail 掉 pipeline
+* 輸入資料（如上游 S3、DB、Kafka）應符合 GE 定義的期望
+* 一旦契約破壞，GE 可透過 CI/CD、自動驗證流程 fail 掉 pipeline
 
 → 這在 Data Mesh、Data Platform、自助式分析團隊中非常關鍵。
 
-📌 3. Pipeline Monitoring（資料流程監控）
+---
+
+## 📌 3. **Pipeline Monitoring（資料流程監控）**
+
 你可以結合 GE 的驗證結果：
 
-寫入到 logs / DataDog / Prometheus
-
-通知 Slack / Email
-
-出問題時自動中斷 Airflow / dbt / Glue Job
+* 寫入到 logs / DataDog / Prometheus
+* 通知 Slack / Email
+* 出問題時自動中斷 Airflow / dbt / Glue Job
 
 這讓你不只是「有處理」，而是「確保資料處理正確」。
 
-📌 4. 自動化 Documentation（資料品質報告）
+---
+
+## 📌 4. **自動化 Documentation（資料品質報告）**
+
 GE 會自動產出 Data Docs（HTML 文件），非常適合：
 
-分享資料品質驗證結果給分析師、PM、上游團隊
+* 分享資料品質驗證結果給分析師、PM、上游團隊
+* 在資料平台中嵌入這些文件作為觀測性介面
 
-在資料平台中嵌入這些文件作為觀測性介面
+---
 
-📌 5. 整合主流工具（ETL/Orchestration）
+## 📌 5. **整合主流工具（ETL/Orchestration）**
+
 Great Expectations 能整合：
 
-Airflow：每個 ETL task 結尾加入驗證 task
+* **Airflow**：每個 ETL task 結尾加入驗證 task
+* **AWS Glue / PySpark / Pandas**：在任何資料處理後立刻驗證
+* **dbt**：作為 dbt models 的 validation 補強工具
+* **Redshift / BigQuery / Snowflake / MySQL / PostgreSQL**：都有 connector
 
-AWS Glue / PySpark / Pandas：在任何資料處理後立刻驗證
+---
 
-dbt：作為 dbt models 的 validation 補強工具
+## 📌 6. **Medallion Architecture 的每層驗證**
 
-Redshift / BigQuery / Snowflake / MySQL / PostgreSQL：都有 connector
-
-📌 6. Medallion Architecture 的每層驗證
 在 Lakehouse 架構裡：
 
-Bronze 層：驗證是否有 raw schema 與必備欄位
+* **Bronze 層**：驗證是否有 raw schema 與必備欄位
+* **Silver 層**：驗證欄位值正確、關聯正常、轉換無誤
+* **Gold 層**：驗證是否 ready for downstream dashboard/model
 
-Silver 層：驗證欄位值正確、關聯正常、轉換無誤
+---
 
-Gold 層：驗證是否 ready for downstream dashboard/model
+## ✅ 總結：Great Expectations 的資料工程角色
 
-✅ 總結：Great Expectations 的資料工程角色
-用途	描述
-資料驗證	Schema、值範圍、唯一性、型別、空值比例等
-資料契約	定義 upstream / downstream 的 schema contract
-Pipeline 品質保證	與 Airflow / dbt / Glue 整合作為 checkpoint
-觀測性與文件	自動產出 Data Docs 供 QA、分析團隊檢查
-自助式數據開發文化推動	分散式驗證與品質擁有權（data mesh/產品思維）
+| 用途            | 描述                                         |
+| ------------- | ------------------------------------------ |
+| 資料驗證          | Schema、值範圍、唯一性、型別、空值比例等                    |
+| 資料契約          | 定義 upstream / downstream 的 schema contract |
+| Pipeline 品質保證 | 與 Airflow / dbt / Glue 整合作為 checkpoint     |
+| 觀測性與文件        | 自動產出 Data Docs 供 QA、分析團隊檢查                 |
+| 自助式數據開發文化推動   | 分散式驗證與品質擁有權（data mesh/產品思維）                |
 
-
-
-
-
-
+---
